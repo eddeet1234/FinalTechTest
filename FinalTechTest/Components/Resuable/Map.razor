@@ -1,0 +1,53 @@
+﻿@inject IJSRuntime JS
+@using FinalTechTest.Services
+
+<div id="map" style="width: 500px; height: 500px; margin: auto;"></div>
+
+@code {
+	@inject WeatherService WeatherService
+	@inject LocationService LocationService
+
+	protected override void OnInitialized()
+	{
+		LocationService.OnAddMarkerRequested += HandleAddMarkerRequest;
+		LocationService.UpdateMarkerFromInputAction += UpdateMarkerFromInput;
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+
+		if (firstRender)
+		{
+			var locations = await WeatherService.GetAllLocationsAsync();
+			// Convert list to JSON and pass to JS function
+			await JS.InvokeVoidAsync("initMapWithMarkers", "map", locations, DotNetObjectReference.Create(this));
+		}
+	}
+
+	[JSInvokable]
+	public void UpdateSelectedMarker(double lat, double lng, string name)
+	{
+		LocationService.SetLocation(lat, lng, name);
+		StateHasChanged(); // Refresh UI
+	}
+
+	private async void HandleAddMarkerRequest()
+	{
+		await JS.InvokeVoidAsync("addDraggableMarker", "map", DotNetObjectReference.Create(this));
+		StateHasChanged(); // Refresh UI
+	}
+
+	private async void UpdateMarkerFromInput()
+	{
+		var newLat = LocationService.GetNewLatitude();
+		var newlng = LocationService.GetNewLongitude();
+		await JS.InvokeVoidAsync("updateMarkerPosition", "map", newLat, newlng);
+		StateHasChanged(); // Refresh UI
+	}
+
+	[JSInvokable]
+	public void UpdateNewMarkerPosition(double lat, double lng)
+	{
+		LocationService.UpdateMarkerfromMap(lat, lng);
+	}
+}
