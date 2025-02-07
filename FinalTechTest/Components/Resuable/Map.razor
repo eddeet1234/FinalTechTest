@@ -9,11 +9,11 @@
 
 	protected override void OnInitialized()
 	{
-		LocationService.OnAddMarkerRequested += HandleAddMarkerRequest;
-		LocationService.UpdateMarkerFromInputAction += UpdateMarkerFromInput;
-		LocationService.LockMarkerAndAddPopupAction = LockMarkerAndAddPopup; // Now using async Task
-		LocationService.RemoveMarkerAction += RemoveMarker;
-		LocationService.OnLocationChangedFromInput += OpenLocationPopup;
+		LocationService.OnAddMarkerRequestedAction += HandleAddMarkerRequest; //adds new marker to the map
+		LocationService.UpdateMarkerFromInputAction += UpdateMarkerFromInput; //updates marker position from input fields
+		LocationService.LockMarkerAndAddPopupAction = LockMarkerAndAddPopup; //locks the marker in place when location is confirmed
+		LocationService.RemoveMarkerAction += RemoveMarker; //Removes marker when user cancels editing
+		LocationService.OnLocationChangedFromInputAction += OpenLocationPopup; //Opens a popup when new location is selected
 	}
 
 
@@ -28,32 +28,36 @@
 		}
 	}
 
+	//user clicks a marker
 	[JSInvokable]
-	public void UpdateSelectedMarker(double lat, double lng, string name)//user clicks a marker
+	public void UpdateSelectedMarker(double lat, double lng, string name) 
 	{
 		LocationService.SetLocation(lat, lng, name, "map");
 		StateHasChanged(); // Refresh UI
 	}
 
+	//adds a marker to the map
 	private async void HandleAddMarkerRequest()
 	{
 		await JS.InvokeVoidAsync("addDraggableMarker", "map", DotNetObjectReference.Create(this));
 		StateHasChanged(); // Refresh UI
 	}
 
+	//Change marker position from input fields
 	private async void UpdateMarkerFromInput()
 	{
-		var newLat = LocationService.GetNewLatitude();
-		var newlng = LocationService.GetNewLongitude();
+		var newLat = LocationService.MarkerLatitude;
+		var newlng = LocationService.MarkerLongitude;
 		await JS.InvokeVoidAsync("updateMarkerPosition", "map", newLat, newlng);
 		StateHasChanged(); // Refresh UI
 	}
 
+	//Lock marker in place after confirm
 	private async Task LockMarkerAndAddPopup()
 	{
-		var newName = LocationService.GetNewName();
-		var newLat = LocationService.GetNewLatitude();
-		var newlng = LocationService.GetNewLongitude();
+		var newName = LocationService.MarkerName;
+		var newLat = LocationService.MarkerLatitude;
+		var newlng = LocationService.MarkerLongitude;
 		await JS.InvokeVoidAsync("lockMarkerAndAddPopup", "map", newName, newLat, newlng, DotNetObjectReference.Create(this));
 		StateHasChanged(); // Refresh UI
 	}
@@ -65,15 +69,16 @@
 	}
 
 	private async void RemoveMarker()
-    {
-        await JS.InvokeVoidAsync("removeMarker");
-        StateHasChanged(); // Refresh UI
-    }
+	{
+		await JS.InvokeVoidAsync("removeMarker");
+		StateHasChanged(); // Refresh UI
+	}
 
-	 private void OpenLocationPopup()
-    {
-		var locationName = LocationService.GetName();
-        // Call JavaScript function to open the marker popup
+	private void OpenLocationPopup()
+	{
+		var locationName = LocationService.Name;
+
+		// Call JavaScript function to open the marker popup
         JS.InvokeVoidAsync("openMarkerPopup", locationName);
     }
 
