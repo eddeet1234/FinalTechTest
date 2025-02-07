@@ -1,3 +1,15 @@
 ﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.home-button {
+    background-color: white;
+    width: 30px !important;
+    height: 30px !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+    box-sizing: content-box; /* Ensure padding and border are not included in the width/height */
+}

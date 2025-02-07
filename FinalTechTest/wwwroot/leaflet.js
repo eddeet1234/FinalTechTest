@@ -21,6 +21,7 @@ window.initMapWithMarkers = (elementId, locations, dotNetHelper) => {
         // Listen for marker click
         marker.on('click', function () {
             dotNetHelper.invokeMethodAsync('UpdateSelectedMarker', location.latitude, location.longitude, location.name);
+            centerMapOnMarker(location.latitude, location.longitude);
         });
     });
 
@@ -42,7 +43,7 @@ window.addDraggableMarker = (elementId, dotNetHelper) => {
     var lng = center.lng;
 
     window.currentMarker = L.marker([lat, lng], { draggable: true }).addTo(map)
-        .bindPopup("Drag me to adjust position").openPopup();
+        .bindPopup("Drag me to adjust the position").openPopup();
 
     // Notify Blazor when the marker is moved
     window.currentMarker.on('dragend', function () {
@@ -76,6 +77,7 @@ window.lockMarkerAndAddPopup = (elementId, name, lat, lng, dotNetHelper) => {
         // Bind click event to the marker
         window.currentMarker.on('click', function () {
             dotNetHelper.invokeMethodAsync('UpdateSelectedMarker', lat, lng, name);
+            
         });
 
         bounds.push([lat, lng]);
@@ -122,5 +124,10 @@ function openMarkerPopup(locationName) {
     const marker = markers[locationName];
     if (marker) {
         marker.openPopup();
+        centerMapOnMarker(marker.getLatLng().lat, marker.getLatLng().lng);
     }
+}
+
+function centerMapOnMarker(lat, lng) {
+    map.setView([lat, lng],5);
 }

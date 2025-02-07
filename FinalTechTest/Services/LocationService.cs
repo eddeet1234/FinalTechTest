@@ -30,7 +30,7 @@
             Longitude = lng;
             Name = name;
             if (source == "map")
-                OnLocationChangedFromInputAction?.Invoke(); // Notify listeners on Blazor side that location has changed
+                OnLocationChangedfromMapAction?.Invoke(); // Notify listeners on Blazor side that location has changed
             if (source == "input")
                 OnLocationChangedFromInputAction?.Invoke(); // Notify listeners on Map side that location has changed
         }

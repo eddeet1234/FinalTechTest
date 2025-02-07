@@ -16,8 +16,17 @@
 		LocationService.OnLocationChangedFromInputAction += OpenLocationPopup; //Opens a popup when new location is selected
 	}
 
+	public void Dispose()
+	{
+		LocationService.OnAddMarkerRequestedAction -= HandleAddMarkerRequest;
+		LocationService.UpdateMarkerFromInputAction -= UpdateMarkerFromInput;
+		LocationService.LockMarkerAndAddPopupAction -= LockMarkerAndAddPopup;
+		LocationService.RemoveMarkerAction -= RemoveMarker;
+		LocationService.OnLocationChangedFromInputAction -= OpenLocationPopup;
+	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
+
 	{
 
 		if (firstRender)
