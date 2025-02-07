@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinalTechTest.Models
 {
@@ -16,8 +17,11 @@ namespace FinalTechTest.Models
         public double? Rain { get; set; }
         public string Description { get; set; } = string.Empty;
 
+        [ForeignKey("WeatherForecast")]
         public int WeatherForecastId { get; set; }
         public WeatherForecast WeatherForecast { get; set; } // Foreign Key
 
+         public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // New field
+         
     }
 }

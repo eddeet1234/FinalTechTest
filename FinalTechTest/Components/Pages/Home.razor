@@ -5,29 +5,23 @@
 @using Blazor.Heroicons.Outline
 
 <div class="from-picton-blue-500 min-h-screen w-full bg-gradient-to-br to-white bg-no-repeat p-4 bg-[length:200%_200%] bg-[position:60%_40%]">
-	<button class="absolute right-0 top-0 rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700" @onclick="HandleClick">
-		Click me
-	</button>
 	<div class="flex flex-wrap">
 
 
 		<nav class="mb-4 mr-4 h-full w-64 rounded-lg bg-white p-4 shadow-lg transition-shadow duration-100 hover:shadow-xl">
 			<div class="p-4">
-				<h2 class="font-poppins text-xl font-bold text-gray-800">Navigation</h2>
+				<h2 class="font-poppins text-xl font-bold text-gray-800">Locations</h2>
 			</div>
 			<ul class="mt-4">
-				<li class="border-b border-gray-200">
-					<a href="#" class="font-poppins block px-4 py-2 text-gray-700 hover:bg-blue-100">Dashboard</a>
-				</li>
-				<li class="border-b border-gray-200">
-					<a href="#" class="font-poppins block px-4 py-2 text-gray-700 hover:bg-blue-100">Analytics</a>
-				</li>
-				<li class="border-b border-gray-200">
-					<a href="#" class="font-poppins block px-4 py-2 text-gray-700 hover:bg-blue-100">Reports</a>
-				</li>
-				<li class="border-b border-gray-200">
-					<a href="#" class="font-poppins block px-4 py-2 text-gray-700 hover:bg-blue-100">Settings</a>
-				</li>
+				@foreach (var location in _locations)
+				{
+					<li class="border-b border-gray-200">
+						<a href="#" class="font-poppins block px-4 py-2 text-gray-700 hover:bg-blue-100"
+						@onclick="() => LocationService.SetLocation(location.Latitude, location.Longitude, location.Name, _typeSting)">
+							@location.Name
+						</a>
+					</li>
+				}
 			</ul>
 		</nav>
 
@@ -116,7 +110,7 @@
 					<h4 class="mb-4 text-lg font-semibold">Add New Location</h4>
 
 					<label class="block text-sm font-medium text-gray-700">Location Name:</label>
-					<input type="text" bind="@newLocationName"
+					<input type="text" value="@newLocationName" @oninput="UpdateLocationName"
 					class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
 
 					<label class="mt-3 block text-sm font-medium text-gray-700">Latitude:</label>
@@ -145,12 +139,6 @@
 			}
 		</div>
 
-
-
-
-		<h3>Selected Location</h3>
-		<p><b>Location:</b> @LocationService.GetName() (@LocationService.GetLatitude(), @LocationService.GetLongitude())</p>
-
 	</div>
 </div>
 
@@ -168,15 +156,19 @@
 	private string newLocationName = "";
 	private string newLatitudeInput = "";
 	private string newLongitudeInput = "";
-	private double? newLatitude;
-	private double? newLongitude;
 	private bool isValidCoordinates = true;
+	private string _typeSting = "input";
+	private List<LocationDto> _locations = new List<LocationDto>();
 
-	protected override void OnInitialized()
+	protected override async Task OnInitializedAsync()
 	{
-		LocationService.OnLocationChanged += StateHasChanged;
-		LocationService.UpdateMarkerFromMapAction += UpdateMarkerFromMap;
+		LocationService.OnLocationChanged += StateHasChanged; //Location has changed by clicking a new marker
+		LocationService.UpdateMarkerFromMapAction += UpdateMarkerFromMap; //Marker is moved when adding 
+		await UpdateLocations();
 	}
+
+
+
 
 	public void Dispose()
 	{
@@ -184,41 +176,53 @@
 		LocationService.UpdateMarkerFromMapAction += UpdateMarkerFromMap;
 	}
 
-	private async Task HandleClick()
-	{
-		Console.WriteLine("Button clicked");
-		weatherData = await WeatherService.GetWeatherAsync(-25.747868, 28.229271);
-		Console.WriteLine("Weather Received");
-	}
-	private async Task AddLocation()
+
+	#region MapFunctions
+	private void AddLocation()
 	{
 		isDisabledAdd = true;
 		showAddLocationCard = true;
-		StateHasChanged();
+		
 		LocationService.RequestAddMarker(); // Notify LeafletMap to add a marker
+		
 	}
 
-	private void ConfirmLocation()
+	private async Task ConfirmLocation()
 	{
+		if (LocationService.LockMarkerAndAddPopupAction != null)
+		{
+			await LocationService.LockMarkerAndAddPopupAction(); // ✅ Now correctly awaited
+		}
 		showAddLocationCard = false;
 		isDisabledAdd = false;
 		// Save to DB or perform an action
+
 		StateHasChanged();
+		weatherData = await WeatherService.GetWeatherAsync(LocationService.GetName(), LocationService.GetLatitude(), LocationService.GetLongitude());
+		await UpdateLocations();
 	}
 
 	private void CancelLocation()
-	{
+	{	
+		LocationService.RemoveMarker();
 		showAddLocationCard = false;
 		isDisabledAdd = false;
-		StateHasChanged();
 	}
 
-	private async Task UpdateMarkerLat(ChangeEventArgs e)
+	private void UpdateLocationName(ChangeEventArgs e)
+	{
+		newLocationName = e.Value.ToString();
+		LocationService.SetNewName(newLocationName);
+	}
+
+
+	private void UpdateMarkerLat(ChangeEventArgs e)
 	{
 		// Try converting input to double
 		newLatitudeInput = e.Value.ToString();
 		if (newLatitudeInput != null)
 		{
+
 			isValidCoordinates = TryParseCoordinates(newLatitudeInput, newLongitudeInput, out double lat, out double lng);
 
 			if (isValidCoordinates)
@@ -228,7 +232,7 @@
 		}
 	}
 
-	private async Task UpdateMarkerLng(ChangeEventArgs e)
+	private void UpdateMarkerLng(ChangeEventArgs e)
 	{
 		// Try converting input to double
 		newLongitudeInput = e.Value.ToString();
@@ -243,15 +247,21 @@
 		}
 	}
 
-	private async void UpdateMarkerFromMap()
+	//user has moved the draggable marker when Adding
+	private void UpdateMarkerFromMap()
 	{
 		newLatitudeInput = LocationService.GetNewLatitude().ToString();
 		newLongitudeInput = LocationService.GetNewLongitude().ToString();
 		StateHasChanged();
 	}
+
+	#endregion
+
+
 	#region Helpers
 
 	private bool TryParseCoordinates(string latInput, string lngInput, out double lat, out double lng)
+
 
 	{
 		bool isLatValid = double.TryParse(latInput, out lat) && lat is >= -90 and <= 90;
@@ -260,6 +270,9 @@
 		return isLatValid && isLngValid;
 	}
 
-
+	private async Task UpdateLocations()
+	{
+		_locations = await WeatherService.GetAllLocationsAsync();
+	}
 	#endregion
 }

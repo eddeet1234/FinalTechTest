@@ -8,11 +8,10 @@
     {
         [Key]
         public int Id { get; set; }
-
+        public string Name { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
 
-        [InverseProperty("WeatherForecast")]
-        public List<DailyForecast> DailyForecasts { get; set; } = new();
+        public ICollection<DailyForecast> DailyForecasts { get; set; }
     }
 }
