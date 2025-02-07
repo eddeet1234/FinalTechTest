@@ -4,14 +4,14 @@
 
     public class LocationService
     {
-        public event Action? OnLocationChangedfromMapAction; //Location 
-        public event Action? OnLocationChangedFromInputAction;
-        public event Action? OnAddMarkerRequestedAction; // New event for triggering marker addition
-        public event Action? UpdateMarkerFromInputAction; // New event for triggering marker addition
-        public event Action? UpdateMarkerFromMapAction; // New event for triggering marker moving
+        public event Action? OnLocationChangedfromMapAction; //New event for triggering a location change from map
+        public event Action? OnLocationChangedFromInputAction; //New event for triggering a location change from input
+        public event Action? OnAddMarkerRequestedAction; //New event for triggering marker addition
+        public event Action? UpdateMarkerFromInputAction; //New event to change marker location from input
+        public event Action? UpdateMarkerFromMapAction; //New event to change marker location from map
+        public Func<Task>? LockMarkerAndAddPopupAction; //New event to lock marker in place
+        public event Action? RemoveMarkerAction; //New event for triggering marker removal
 
-        public Func<Task>? LockMarkerAndAddPopupAction;
-        public event Action? RemoveMarkerAction; // New event for triggering marker removal
         public double Latitude { get; private set; }
         public double Longitude { get; private set; }
         public string Name { get; private set; }
