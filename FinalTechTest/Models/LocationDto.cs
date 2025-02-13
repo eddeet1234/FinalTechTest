@@ -1,4 +1,4 @@
-﻿namespace FinalTechTest.Services
+﻿namespace FinalTechTest.Models
 {
     public class LocationDto
     {

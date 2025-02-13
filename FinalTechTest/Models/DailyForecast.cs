@@ -13,13 +13,14 @@ namespace FinalTechTest.Models
         public double MaxTemp { get; set; }
         public int Humidity { get; set; }
         public double WindSpeed { get; set; }
+        public double WindDeg { get; set; }
         public double UvIndex { get; set; }
         public double? Rain { get; set; }
         public string Description { get; set; } = string.Empty;
 
         [ForeignKey("WeatherForecast")]
         public int WeatherForecastId { get; set; }
-        public WeatherForecast WeatherForecast { get; set; } // Foreign Key
+        public WeatherForecast WeatherForecast { get; set; } //Navigation Property (You lose the ability to use eager loading (e.g., .Include()) to load related WeatherForecast data as part of your DailyForecast queries. Eager loading relies on navigation properties to include related data in a single query.)
 
          public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // New field
          

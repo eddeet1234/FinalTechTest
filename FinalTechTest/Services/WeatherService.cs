@@ -13,7 +13,7 @@
         private readonly ApplicationDbContext _dbContext;
         private readonly string _apiKey = "10288c9849305809b834891e197cebb5"; // Replace with your key
 
-        public WeatherService(HttpClient httpClient,ApplicationDbContext dbContext)
+        public WeatherService(HttpClient httpClient, ApplicationDbContext dbContext)
         {
             _httpClient = httpClient;
             _dbContext = dbContext;
@@ -22,19 +22,24 @@
         public async Task<WeatherForecastDto?> GetWeatherAsync(string name, double lat, double lon)
         {
 
-            if(name==null)
+            if (name == null)
             {
                 return null;
             }
 
             string url = $"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,alerts&units=metric&appid={_apiKey}";
+            //var response = await _httpClient.GetAsync(url); // Get raw HTTP response
+            //var jsonResponse = await response.Content.ReadAsStringAsync(); // Convert response to string
+
+            //Console.WriteLine("OpenWeather API Response:");
+            //Console.WriteLine(jsonResponse); // ✅ Print raw JSON to console
 
             var weatherData = await _httpClient.GetFromJsonAsync<WeatherForecastDto>(url);
-
+            //WeatherForecastDto? weatherData = null;
             if (weatherData != null)
             {
 
-                
+
                 Console.WriteLine("Weather Forecast:");
                 foreach (var day in weatherData.Daily)
                 {
@@ -57,41 +62,82 @@
                     foreach (var day in weatherData.Daily)
                     {
 
-                            existingForecast.DailyForecasts.Add(new DailyForecast
-                            {
-                                DateTimestamp = day.DateTimestamp,
-                                MinTemp = day.Temp.Min,
-                                MaxTemp = day.Temp.Max,
-                                Humidity = day.Humidity,
-                                WindSpeed = day.WindSpeed,
-                                UvIndex = day.UvIndex,
-                                Rain = day.Rain ?? 0,
-                                Description = day.Weather[0].Description
-                            });
+                        existingForecast.DailyForecasts.Add(new DailyForecast
+                        {
+                            DateTimestamp = day.DateTimestamp,
+                            MinTemp = day.Temp.Min,
+                            MaxTemp = day.Temp.Max,
+                            Humidity = day.Humidity,
+                            WindSpeed = day.WindSpeed,
+                            WindDeg = day.WindDeg,
+                            UvIndex = day.UvIndex,
+                            Rain = day.Rain ?? 0,
+                            Description = day.Weather[0].Description
+                        });
                     }
+
+                    // Update current weather
+                    existingForecast.CurrentWeather = new CurrentWeather
+                    {
+                        Timestamp = weatherData.Current.Timestamp,
+                        Sunrise = weatherData.Current.Sunrise,
+                        Sunset = weatherData.Current.Sunset,
+                        Temperature = weatherData.Current.Temperature,
+                        FeelsLike = weatherData.Current.FeelsLike,
+                        Pressure = weatherData.Current.Pressure,
+                        Humidity = weatherData.Current.Humidity,
+                        DewPoint = weatherData.Current.DewPoint,
+                        UvIndex = weatherData.Current.UvIndex,
+                        CloudCover = weatherData.Current.CloudCover,
+                        Visibility = weatherData.Current.Visibility,
+                        WindSpeed = weatherData.Current.WindSpeed,
+                        WindDeg = weatherData.Current.WindDeg,
+                        WindGust = weatherData.Current.WindGust,
+                        Weather = weatherData.Current.Weather[0].Description
+                    };
                 }
                 else
                 {
-                var forecastEntity = new WeatherForecast
-                {
-                    Name = name,
-                    Latitude = lat,
-                    Longitude = lon,
-                    DailyForecasts = weatherData.Daily.Select(day => new DailyForecast
+                    var forecastEntity = new WeatherForecast
                     {
-                        DateTimestamp = day.DateTimestamp,
-                        MinTemp = day.Temp.Min,
-                        MaxTemp = day.Temp.Max,
-                        Humidity = day.Humidity,
-                        WindSpeed = day.WindSpeed,
-                        UvIndex = day.UvIndex,
-                        Rain = day.Rain ?? 0,
-                        Description = day.Weather[0].Description
-                    }).ToList()
-                };
+                        Name = name,
+                        Latitude = lat,
+                        Longitude = lon,
+                        DailyForecasts = weatherData.Daily.Select(day => new DailyForecast
+                        {
+                            DateTimestamp = day.DateTimestamp,
+                            MinTemp = day.Temp.Min,
+                            MaxTemp = day.Temp.Max,
+                            Humidity = day.Humidity,
+                            WindSpeed = day.WindSpeed,
+                            WindDeg = day.WindDeg,
+                            UvIndex = day.UvIndex,
+                            Rain = day.Rain ?? 0,
+                            Description = day.Weather[0].Description
+                        }).ToList(),
+
+                        CurrentWeather = new CurrentWeather
+                        {
+                            Timestamp = weatherData.Current.Timestamp,
+                            Sunrise = weatherData.Current.Sunrise,
+                            Sunset = weatherData.Current.Sunset,
+                            Temperature = weatherData.Current.Temperature,
+                            FeelsLike = weatherData.Current.FeelsLike,
+                            Pressure = weatherData.Current.Pressure,
+                            Humidity = weatherData.Current.Humidity,
+                            DewPoint = weatherData.Current.DewPoint,
+                            UvIndex = weatherData.Current.UvIndex,
+                            CloudCover = weatherData.Current.CloudCover,
+                            Visibility = weatherData.Current.Visibility,
+                            WindSpeed = weatherData.Current.WindSpeed,
+                            WindDeg = weatherData.Current.WindDeg,
+                            WindGust = weatherData.Current.WindGust,
+                            Weather = weatherData.Current.Weather[0].Description
+                        }
+                    };
 
                     _dbContext.WeatherForecasts.Add(forecastEntity);
-                    
+
                 }
 
                 await _dbContext.SaveChangesAsync(); // Save to database
@@ -108,7 +154,7 @@
         public async Task<List<LocationDto>> GetAllLocationsAsync()
         {
             var locations = await _dbContext.WeatherForecasts
-                
+
                 .Select(f => new LocationDto
                 {
                     Name = f.Name,
