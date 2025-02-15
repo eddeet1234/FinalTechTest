@@ -59,14 +59,12 @@
             MarkerName = name;
         }
 
-        public async Task LockMarkerAndAddPopup()
+        public void clearMarkerAtrributes()
         {
-            if (LockMarkerAndAddPopupAction != null)
-            {
-                await LockMarkerAndAddPopupAction.Invoke(); //Ensures execution is awaited
-            }
+            MarkerName = "";
+            MarkerLatitude = 0;
+            MarkerLongitude = 0;
         }
-
         public void RemoveMarker()
         {
             RemoveMarkerAction?.Invoke();

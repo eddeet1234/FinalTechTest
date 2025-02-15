@@ -5,19 +5,25 @@
 @using FinalTechTest.Components.Resuable
 @using Blazor.Heroicons.Outline
 
-<div class="from-picton-blue-500 min-h-screen w-full bg-gradient-to-br to-white bg-no-repeat p-4 bg-[length:200%_200%] bg-[position:60%_40%]">
+<div class="min-h-screen w-full bg-cover bg-no-repeat p-4" style="background-image: url('farm.jpg');">
 	<div class="flex flex-wrap">
 
 
 		<nav class="mb-4 mr-4 h-full w-64 rounded-lg bg-white p-4 shadow-lg transition-shadow duration-100 hover:shadow-xl">
-			<div class="p-4">
-				<h2 class="font-poppins text-xl font-bold text-gray-800">Locations</h2>
+			<div class="flex flex-row justify-between gap-2 pl-4 pt-1">
+				<h2 class="font-poppins text-picton-blue-700 text-xl font-bold">Locations</h2>
+
+				<button title="Add location" class="border-2 mr-6 flex h-7 w-7 items-center justify-center rounded-lg bg-white transition-shadow duration-100 hover:shadow-lg hover:bg-picton-blue-200" @onclick="AddLocation" disabled="@_isDisabledAdd">
+					<PlusIcon class="font-bo text-picton-blue-700 h-6 w-6" />
+				</button>
+
 			</div>
+
 			<ul class="mt-4 max-h-96 overflow-y-auto">
 				@foreach (var location in _locations)
 				{
-					<li class="rounded-lg border-b border-gray-200">
-						<a class="font-poppins m-1 block rounded-lg px-4 py-2 text-gray-700 hover:bg-picton-blue-200 @(_selectedLocationName == location.Name ? "border-2 border-blue-500" : "")"
+					<li class="rounded-lg">
+						<a class="font-poppins m-1 block rounded-lg px-4 py-2 text-gray-700 hover:bg-picton-blue-200 @(_selectedLocationName == location.Name ? "border-2 border-picton-blue-500" : "")"
 						   @onclick="() => SetLocation(location.Latitude,location.Longitude,location.Name)">
 							@location.Name
 						</a>
@@ -56,8 +62,20 @@
 			<div class="grid-cols-1 mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				<!-- Total Revenue -->
 				<div class="col-span-2 rounded-lg bg-white p-4 shadow-lg transition-shadow duration-100 hover:shadow-xl">
-					<h2 class="font-poppins text-gray-600">Total Revenue</h2>
-					<div class="mt-4 h-40 rounded bg-gray-200">Chart Placeholder</div>
+					<h2 class="font-poppins text-picton-blue-700 text-lg font-bold">Min-Max Temperatures</h2>
+					<div class="mt-4">
+
+						<MixedChartComponent @ref="mixedChart"
+											 ChartId="MinMaxTemps"
+											 Series="@_seriesDataMinMax"
+											 Labels="@_labels"
+											 YAxisTitle=""
+											 LineColors='@(new List<string> {"#184974", "#2c87cb" })'
+											 FixedHeight="300px"
+											 GradientColors='@(new List<string> {"#1d6aac", "#8ec2eb" })'
+											 StrokeWidth='@(new List<int> {3,3})'
+											 Title="" />
+					</div>
 				</div>
 
 				<!-- Top Traffic By Source -->
@@ -83,49 +101,37 @@
 					</ul>
 				</div>
 
-				<!-- Users By Device -->
-				<div class="rounded-lg bg-white p-4 shadow-lg transition-shadow duration-100 hover:shadow-xl">
-					<h2 class="font-poppins text-gray-600">Users By Device</h2>
-					<div class="mt-4 h-40 rounded bg-gray-200">Chart Placeholder</div>
-				</div>
+
 			</div>
 		</div>
 
 
 		<div class="mb-4 mr-4 h-full rounded-lg bg-white p-4 shadow-lg transition-shadow duration-100 hover:shadow-xl">
 			<Map />
-			<div class="flex flex-row gap-2">
-				@if (!_isDisabledAdd)
-				{
-					<button class="border-2 mt-4 flex h-8 w-40 items-center justify-center rounded-lg bg-white shadow-md transition-shadow duration-100 hover:shadow-lg hover:bg-picton-blue-200" @onclick="AddLocation" disabled="@_isDisabledAdd">
-						<PlusIcon class="font-bo h-6 w-6 text-gray-800" />
-						<p class="font-poppins text-lg font-semibold text-gray-800">Add Location </p>
-					</button>
-				}
-			</div>
+
 
 			@if (_showAddLocationCard)
 			{
 
 				<div class="border-2 mt-4 w-full transform rounded-lg bg-white p-6">
-					<h4 class="mb-4 text-lg font-semibold">Add New Location</h4>
+					<h4 class="text-picton-blue-700 mb-4 text-lg font-semibold">Add New Location</h4>
 
 					<label class="block text-sm font-medium text-gray-700">Location Name:</label>
 					<input type="text" value="@_newMarkerName" @oninput="UpdateMarkerName"
-						   class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+						   class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-picton-blue-500 focus:outline-none focus:border-2" />
 
 					<label class="mt-3 block text-sm font-medium text-gray-700">Latitude:</label>
 					<input type="text" value="@_newMarkerLatitude" @oninput="UpdateMarkerLat"
-						   class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+						   class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-picton-blue-500 focus:outline-none focus:border-2" />
 
 					<label class="mt-3 block text-sm font-medium text-gray-700">Longitude:</label>
 					<input type="text" value="@_newMarkerLongitude" @oninput="UpdateMarkerLng"
-						   class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+						   class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-picton-blue-500 focus:outline-none focus:border-2" />
 
 
 					<div class="mt-4 flex justify-between">
 						<button @onclick="ConfirmLocation"
-								class="bg-picton-blue-500 rounded-lg px-4 py-2 text-white shadow hover:bg-blue-600">
+								class="bg-picton-blue-500 rounded-lg px-4 py-2 text-white shadow hover:bg-picton-blue-700">
 							Confirm
 						</button>
 
@@ -163,6 +169,13 @@
 	private string _typeSting = "input";
 	private List<LocationDto> _locations = new List<LocationDto>();
 
+
+	private List<MixedChartComponent.SeriesData> _seriesDataMinMax = new List<MixedChartComponent.SeriesData>();
+
+	private List<string> _labels = new List<string>();
+
+	private MixedChartComponent mixedChart;
+
 	protected override async Task OnInitializedAsync()
 	{
 		LocationService.OnLocationChangedfromMapAction += UpdateLocation; //Location has changed by clicking a new marker
@@ -172,23 +185,25 @@
 
 	public void Dispose()
 	{
-		LocationService.OnLocationChangedfromMapAction -= StateHasChanged;
+		LocationService.OnLocationChangedfromMapAction -= UpdateLocation;
 		LocationService.UpdateMarkerFromMapAction += UpdateMarkerFromMap;
 	}
 
 	#region MapFunctions
 
-	private void SetLocation(double lat, double lng, string name)
+	private async Task SetLocation(double lat, double lng, string name)
 	{
 
 		LocationService.SetLocation(lat, lng, name, _typeSting);
 		UpdateLocation();
+
 	}
 
-	private void UpdateLocation()
+	private async void UpdateLocation()
 	{
 		_selectedLocationName = LocationService.Name;
-		StateHasChanged();
+		await UpdateWeatherDashboard();
+
 	}
 
 
@@ -210,7 +225,10 @@
 		}
 		_showAddLocationCard = false;
 		_isDisabledAdd = false;
-		// Save to DB or perform an action
+
+		_newMarkerName = "";
+		_newMarkerLatitude = "";
+		_newMarkerLongitude = "";
 
 		StateHasChanged();
 		_weatherData = await WeatherService.GetWeatherAsync(LocationService.Name, LocationService.Latitude, LocationService.Longitude);
@@ -272,6 +290,39 @@
 
 	#endregion
 
+	#region WeatherFunctions
+	private async Task UpdateWeatherDashboard()
+	{
+		var forecasts = await WeatherService.Get8DayForecastAsync(LocationService.Latitude, LocationService.Longitude, LocationService.Name);
+		var minTemps = forecasts.Select(f => f.MinTemp).ToList();
+		var maxTemps = forecasts.Select(f => f.MaxTemp).ToList();
+		_labels = forecasts.Select(f => DateTimeOffset.FromUnixTimeSeconds(f.DateTimestamp).ToString("MMM dd")).ToList();
+
+		_seriesDataMinMax = new List<MixedChartComponent.SeriesData>
+		{
+			new MixedChartComponent.SeriesData
+			{
+				Name = "Min Temperature",
+				Type = "area",
+				Data = minTemps,
+				Unit = "°C"
+			},
+			new MixedChartComponent.SeriesData
+			{
+				Name = "Max Temperature",
+				Type = "area",
+				Data = maxTemps,
+				Unit = "°C"
+			}
+		};
+
+		if (mixedChart != null)
+		{
+			StateHasChanged();
+			await mixedChart.UpdateChart();
+		}
+	}
+	#endregion
 
 	#region Helpers
 

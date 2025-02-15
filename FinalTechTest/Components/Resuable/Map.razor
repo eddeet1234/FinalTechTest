@@ -67,6 +67,7 @@
 		var newName = LocationService.MarkerName;
 		var newLat = LocationService.MarkerLatitude;
 		var newlng = LocationService.MarkerLongitude;
+		LocationService.clearMarkerAtrributes();
 		await JS.InvokeVoidAsync("lockMarkerAndAddPopup", "map", newName, newLat, newlng, DotNetObjectReference.Create(this));
 		StateHasChanged(); // Refresh UI
 	}

@@ -167,6 +167,20 @@
 
             return locations;
         }
+
+        public async Task<List<DailyForecast>> Get8DayForecastAsync(double lat, double lon, string name)
+        {
+            int currentLocationId = await _dbContext.WeatherForecasts
+                .Where(w => w.Latitude == lat && w.Longitude == lon && w.Name == name)
+                .Select(w => w.Id)
+                .FirstOrDefaultAsync();
+
+            // Fetch the 8-day forecast from the database
+            return await _dbContext.DailyForecasts
+                .Where(d => d.WeatherForecastId == currentLocationId)
+                .OrderBy(d => d.DateTimestamp)
+                .ToListAsync();
+        }
     }
 
 }

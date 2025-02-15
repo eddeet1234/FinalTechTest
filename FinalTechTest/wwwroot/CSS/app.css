@@ -13,3 +13,7 @@
     border: 1px solid #ccc; /* Optional: Add a border for better visibility */
     box-sizing: content-box; /* Ensure padding and border are not included in the width/height */
 }
+
+input:focus {
+    border-color: #2c87cb !important; /* Force Picton Blue */
+}

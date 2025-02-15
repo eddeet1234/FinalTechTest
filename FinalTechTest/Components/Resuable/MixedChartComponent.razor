@@ -1,0 +1,170 @@
+﻿@inject IJSRuntime JsRuntime
+
+<div id="chart-@ChartId" class="flex-1 block">
+    <div class="flex-1">
+        <div id="@ChartId" class="min-w-0" style="height: @FixedHeight;"></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ChartId { get; set; } = $"mixed-chart-{Guid.NewGuid()}";
+
+    [Parameter]
+    public List<SeriesData> Series { get; set; }
+
+    [Parameter]
+    public List<string> Labels { get; set; }
+
+    [Parameter]
+    public string YAxisTitle { get; set; } = "";
+
+    [Parameter]
+    public string FixedHeight { get; set; } = "350px";
+
+    [Parameter]
+    public List<string> LineColors { get; set; }
+
+    [Parameter]
+    public List<string>? GradientColors { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public List<int> StrokeWidth { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RenderChart();
+        }
+    }
+
+    private async Task RenderChart()
+    {
+
+        var colors = new[] { "#FF5733", "#33FF57", "#3357FF" }; // Default colors
+
+        var fillTypes = Series.Select((s, index) =>
+            (GradientColors != null && GradientColors.Count > index && !string.IsNullOrEmpty(GradientColors[index]))
+                ? "gradient" : "solid"
+        ).ToArray();
+
+        var gradientColorsArray = Series.Select((s, index) =>
+            (GradientColors != null && GradientColors.Count > index)
+                ? GradientColors[index] : colors[index]
+        ).ToArray();
+
+        var chartOptions = new
+        {
+            series = Series.Select(s => new
+            {
+                name = s.Name,
+                type = s.Type,
+                data = s.Data
+            }).ToList(),
+            chart = new
+            {
+                height = FixedHeight,
+                type = "line",
+                stacked = false,
+                fontFamily = "system-ui, sans-serif"
+            },
+            colors = LineColors, // Ensures legend, lines, and markers have the same colors
+            stroke = new
+            {
+                width = StrokeWidth,
+                curve = "smooth",
+            },
+            fill = new
+            {
+                type = fillTypes, // Determines if gradient or solid is applied
+                gradient = new
+                {
+                    shade = "light",
+                    type = "vertical",
+                    shadeIntensity = 0.4,
+                    gradientToColors = gradientColorsArray, // Applies gradient colors dynamically
+                    opacityFrom = 0.9,
+                    opacityTo = 0.3,
+                    stops = new[] { 0, 100 }
+                }
+            },
+            plotOptions = new
+            {
+                bar = new
+                {
+                    columnWidth = "50%"
+                }
+            },
+            labels = Labels,
+            markers = new
+            {
+                size = 0
+            },
+            title = new
+            {
+                text = Title,
+                align = "left",
+                style = new
+                {
+                    color = "#353535",
+                    fontSize = "20px",
+                    margin = 30,
+                    fontFamily = "system-ui, sans-serif",
+                    fontWeight = "bold"
+                }
+            },
+            xaxis = new
+            {
+                labels = new
+                {
+                    style = new
+                    {
+                        fontSize = "16px",
+                        fontFamily = "system-ui, sans-serif"
+                    }
+                }
+            },
+            yaxis = new
+            {
+                title = new
+                {
+                    text = YAxisTitle,
+                    style = new
+                    {
+                        fontSize = "16px",
+                        fontFamily = "system-ui, sans-serif"
+                    }
+                }
+            },
+
+        };
+
+        var units = Series.Select(s => s.Unit).ToList(); // Extract units
+        await JsRuntime.InvokeVoidAsync("MixedChartWrapper.createChart", ChartId, chartOptions, units);
+    }
+
+    // Updates the chart
+    public async Task UpdateChart()
+    {
+        await JsRuntime.InvokeVoidAsync("MixedChartWrapper.destroyChart", ChartId);
+        await RenderChart();
+    }
+
+    // Destroy the chart
+    public async Task DestroyChart()
+    {
+        await JsRuntime.InvokeVoidAsync("MixedChartWrapper.destroyChart", ChartId);
+    }
+
+    public class SeriesData
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public List<double> Data { get; set; }
+        public string Unit { get; set; }
+    }
+}

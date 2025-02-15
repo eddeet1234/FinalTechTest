@@ -77,7 +77,7 @@ window.lockMarkerAndAddPopup = (elementId, name, lat, lng, dotNetHelper) => {
         // Bind click event to the marker
         window.currentMarker.on('click', function () {
             dotNetHelper.invokeMethodAsync('UpdateSelectedMarker', lat, lng, name);
-            
+            centerMapOnMarker(lat,lng)
         });
 
         bounds.push([lat, lng]);
