@@ -1,6 +1,8 @@
 ﻿var map = null
 var bounds = [];
 let markers = {};
+
+
 window.initMapWithMarkers = (elementId, locations, dotNetHelper) => {
     map = L.map(elementId).setView([0, 0], 2); // Default view, will auto-adjust
 
